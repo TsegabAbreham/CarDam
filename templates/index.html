@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <title>Car Damage Detector</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Car Damage Detector</h1>
+    </header>
+
+    <form method="POST" enctype="multipart/form-data" class="card upload-card">
+      <label class="file-input">
+        <input type="file" name="image" accept="image/*" capture="environment" required>
+        📁 Choose or take photo
+      </label>
+      <button type="submit" class="btn">Analyze</button>
+    </form>
+
+    {% if result %}
+      <div class="result-box card">
+        <h2>{{ result_text }}</h2>
+        {% if filename %}
+          <div class="image-wrapper">
+            <img src="{{ url_for('uploaded_file', filename=filename) }}" alt="Result">
+          </div>
+        {% endif %}
+        {% if detected %}
+          <div class="detected-list">
+            <h3>Detected Types</h3>
+            <ul>
+              {% for item in detected %}
+                <li style="color: {{ item.color_hex }}">{{ item.color_name }}: {{ item.class }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    <footer>
+      <small>Powered by Roboflow</small>
+    </footer>
+  </div>
+</body>
+</html>
