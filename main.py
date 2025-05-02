@@ -59,7 +59,7 @@ def index():
                 y0 = p['y'] - p['height']/2
                 x1 = x0 + p['width']
                 y1 = y0 + p['height']
-                draw.rectangle([x0, y0, x1, y1], outline=hex_color, width=10)
+                draw.rectangle([x0, y0, x1, y1], outline=hex_color, width=30)
                 detected.append({'class': cls, 'color_name': name, 'color_hex': hex_color})
 
             img.save(path)
