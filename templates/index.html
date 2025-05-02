@@ -1,3 +1,4 @@
+<!-- templates/index.html (updated form inputs and display) -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -8,13 +9,16 @@
 </head>
 <body>
   <div class="container">
-    <header>
-      <h1>Car Damage Detector</h1>
-    </header>
+    <header><h1>Car Damage Detector</h1></header>
 
     <form method="POST" enctype="multipart/form-data" class="card upload-card">
+      <!-- New fields for car information -->
+      <input type="text" name="make" placeholder="Car Make (e.g., Toyota)" required>
+      <input type="text" name="model" placeholder="Car Model (e.g., Camry)" required>
+      <input type="number" name="year" placeholder="Year (e.g., 2020)" required min="1900" max="{{  (config=") }}">
+
       <label class="file-input">
-        <input type="file" name="image" accept="image/*" capture="environment" required>
+        <input type="file" name="image" accept="image/*" required>
         📁 Choose or take photo
       </label>
       <button type="submit" class="btn">Analyze</button>
@@ -28,12 +32,15 @@
             <img src="{{ url_for('uploaded_file', filename=filename) }}" alt="Result">
           </div>
         {% endif %}
+
         {% if detected %}
           <div class="detected-list">
-            <h3>Detected Types</h3>
+            <h3>Detected Types & Estimated Repair Cost</h3>
             <ul>
               {% for item in detected %}
-                <li style="color: {{ item.color_hex }}">{{ item.color_name }}: {{ item.class }}</li>
+                <li style="color: {{ item.color_hex }}">
+                  {{ item.color_name }} ({{ item.class }}): {{ item.estimate }}
+                </li>
               {% endfor %}
             </ul>
           </div>
@@ -41,9 +48,7 @@
       </div>
     {% endif %}
 
-    <footer>
-      <small>Powered by Roboflow</small>
-    </footer>
+    <footer><small>Powered by Roboflow & RepairPal estimates</small></footer>
   </div>
 </body>
 </html>
