@@ -1,3 +1,8 @@
+from flask import Flask, render_template, request, send_file
+from inference_sdk import InferenceHTTPClient
+from PIL import Image, ImageDraw
+import os, uuid
+
 app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -54,7 +59,7 @@ def index():
                 y0 = p['y'] - p['height']/2
                 x1 = x0 + p['width']
                 y1 = y0 + p['height']
-                draw.rectangle([x0, y0, x1, y1], outline=hex_color, width=30)
+                draw.rectangle([x0, y0, x1, y1], outline=hex_color, width=50)
                 detected.append({'class': cls, 'color_name': name, 'color_hex': hex_color})
 
             img.save(path)
