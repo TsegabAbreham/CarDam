@@ -1,10 +1,3 @@
-# app.py (updated)
-from flask import Flask, render_template, request, send_file
-from inference_sdk import InferenceHTTPClient
-from PIL import Image, ImageDraw
-from bs4 import BeautifulSoup
-import requests, os, uuid
-
 app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -14,34 +7,26 @@ CLIENT = InferenceHTTPClient(
     api_key="4qcbtf9iBt4zBqf5P8PU"
 )
 
-# Color mapping for each damage class (unchanged)
+# Color mapping for each damage class
 CLASS_COLORS = {
     'Front-Windscreen-Damage': ('Blue', '#3498db'),
-    # ... (other mappings) ...
+    'Headlight-Damage':         ('Green', '#27ae60'),
+    'Rear-windscreen-Damage':   ('Orange', '#e67e22'),
+    'RunningBoard-Dent':        ('Purple', '#9b59b6'),
+    'Sidemirror-Damage':        ('Teal', '#1abc9c'),
+    'Signlight-Damage':         ('Maroon', '#c0392b'),
+    'Taillight-Damage':         ('Navy', '#2c3e50'),
+    'bonnet-dent':              ('Olive', '#808000'),
+    'doorouter-dent':           ('Brown', '#8b4513'),
+    'fender-dent':              ('Coral', '#ff7f50'),
+    'front-bumper-dent':        ('Crimson', '#dc143c'),
+    'medium-Bodypanel-Dent':    ('DarkGreen', '#006400'),
+    'pillar-dent':              ('DarkOrange', '#ff8c00'),
+    'quaterpanel-dent':         ('DarkBlue', '#00008b'),
+    'rear-bumper-dent':         ('DarkRed', '#8b0000'),
+    'roof-dent':                ('DarkMagenta', '#8b008b')
 }
 default_color = ('Red', '#e74c3c')
-
-
-def get_price_estimate(make, model, year, damage_class):
-    """
-    Scrape RepairPal (or similar) for estimated repair cost range.
-    Returns a string like "$100 - $300" or 'N/A' on failure.
-    """
-    # Create URL slug for damage component
-    slug = damage_class.lower().replace(' ', '-')
-    # Example RepairPal estimator URL pattern
-    url = f"https://www.repairpal.com/estimator/{make}/{model}/{year}/{slug}"
-    try:
-        resp = requests.get(url, timeout=5)
-        resp.raise_for_status()
-        soup = BeautifulSoup(resp.text, 'html.parser')
-        # Inspect RepairPal page to find the cost range element
-        elem = soup.find('span', class_='estimator-range') or soup.find('div', class_='cost-range')
-        if elem:
-            return elem.get_text(strip=True)
-    except Exception as e:
-        print(f"Estimate lookup failed for {damage_class}: {e}")
-    return 'N/A'
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -51,19 +36,12 @@ def index():
     detected = []
 
     if request.method == 'POST':
-        # Capture car info from form
-        make = request.form.get('make', '').strip()
-        model = request.form.get('model', '').strip()
-        year = request.form.get('year', '').strip()
-
-        # Save uploaded image
         image_file = request.files['image']
         filename = f"{uuid.uuid4().hex}.jpg"
         path = os.path.join(UPLOAD_FOLDER, filename)
         image_file.save(path)
 
         try:
-            # Run inference
             response = CLIENT.infer(path, model_id="cardamage-l4vtd/1")
             img = Image.open(path).convert("RGB")
             draw = ImageDraw.Draw(img)
@@ -72,23 +50,13 @@ def index():
             for p in preds:
                 cls = p.get('class', '')
                 name, hex_color = CLASS_COLORS.get(cls, default_color)
-                # Draw bounding box
                 x0 = p['x'] - p['width']/2
                 y0 = p['y'] - p['height']/2
                 x1 = x0 + p['width']
                 y1 = y0 + p['height']
-                draw.rectangle([x0, y0, x1, y1], outline=hex_color, width=4)
+                draw.rectangle([x0, y0, x1, y1], outline=hex_color, width=30)
+                detected.append({'class': cls, 'color_name': name, 'color_hex': hex_color})
 
-                # Get price estimate
-                estimate = get_price_estimate(make, model, year, cls)
-                detected.append({
-                    'class': cls,
-                    'color_name': name,
-                    'color_hex': hex_color,
-                    'estimate': estimate
-                })
-
-            # Save annotated image
             img.save(path)
             result = True
             result_text = f"{len(detected)} damage area(s) detected" if detected else "No damage detected."
